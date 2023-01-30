@@ -1,16 +1,21 @@
 const router = require('express').Router();
 const {
   getUsers,
+  getCurrentUser,
   getUser,
-  createUser,
   updateProfile,
   updateAvatar,
 } = require('../controllers/users');
+const {
+  validationUserId,
+  validationUpdateProfile,
+  validationUpdateAvatar,
+} = require('../middlewares/validations');
 
 router.get('/', getUsers);
-router.get('/:userId', getUser);
-router.post('/', createUser);
-router.patch('/me', updateProfile);
-router.patch('/me/avatar', updateAvatar);
+router.get('/me', getCurrentUser);
+router.get('/:userId', validationUserId, getUser);
+router.patch('/me', validationUpdateProfile, updateProfile);
+router.patch('/me/avatar', validationUpdateAvatar, updateAvatar);
 
 module.exports = router;

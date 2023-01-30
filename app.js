@@ -1,24 +1,30 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const { errors } = require('celebrate');
+const { createUser, login } = require('./controllers/users');
+const {
+  validationCreateUser,
+  validationLogin,
+} = require('./middlewares/validations');
+const auth = require('./middlewares/auth');
+const handelError = require('./middlewares/handelError');
 const routes = require('./routes');
+
+const app = express();
 
 const { PORT = 3000 } = process.env;
 const DATA_URL = 'mongodb://127.0.0.1:27017/mestodb';
 
-const app = express();
-
 app.use(bodyParser.json());
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '63c6726334d07958e27ac6bf',
-  };
+app.post('/signin', validationLogin, login);
+app.post('/signup', validationCreateUser, createUser);
 
-  next();
-});
-
+app.use(auth);
 app.use(routes);
+app.use(errors());
+app.use(handelError);
 
 mongoose
   .connect(DATA_URL)
