@@ -4,17 +4,17 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { celebrate, Joi, errors } = require('celebrate');
 const helmet = require('helmet');
-// const rateLimit = require('express-rate-limit');
+const rateLimit = require('express-rate-limit');
 const router = require('./routes/index');
 const { login, createUser } = require('./controllers/users');
 const handleError = require('./middlewares/handleError');
 
 const app = express();
 
-// const limiter = rateLimit({
-//   windowMs: 60 * 60 * 1000,
-//   max: 5000,
-// });
+const limiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5000,
+});
 
 app.use(cookieParser());
 
@@ -45,7 +45,7 @@ app.get('/signout', (req, res) => {
   res.status(200).clearCookie('jwt').send({ message: 'Выход' });
 });
 
-// app.use(limiter);
+app.use(limiter);
 
 app.use(helmet());
 
