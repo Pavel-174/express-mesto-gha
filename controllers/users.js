@@ -11,23 +11,30 @@ const { NODE_ENV, JWT_SECRET } = process.env;
 
 const createUser = (req, res, next) => {
   const {
-    name, about, avatar, email,
+    name, about, avatar, email, password,
   } = req.body;
-  bcrypt.hash(req.body.password, 10)
-    .then((hash) => {
-      Users.create({
-        name, about, avatar, email, password: hash,
+  bcrypt.hash(password, 10)
+    .then((hash) => Users.create({
+      name, about, avatar, email, password: hash,
+    }))
+    .then((newUser) => {
+      if (!newUser) {
+        return next(new NotFound('Пользователь не найден'));
+      } return res.send({
+        name: newUser.name,
+        about: newUser.about,
+        avatar: newUser.avatar,
+        email: newUser.email,
+        _id: newUser._id,
       });
     })
-    .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new ValidationError('Введены ны некорректные данные');
+        next(new ValidationError('Введены ны некорректные данные'));
       } else if (err.code === 11000) {
         throw new ConflictError('Пользователь с таким email уже существует');
-      }
-    })
-    .catch(next);
+      } next(err);
+    });
 };
 
 const getCurrentUser = (req, res, next) => {
