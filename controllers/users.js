@@ -42,39 +42,20 @@ const createUser = (req, res, next) => {
     });
 };
 
-// const getCurrentUser = (req, res, next) => {
-//   Users.findById(req.user._id)
-//     .then((user) => {
-//       if (user == null) {
-//         return next(new NotFound('Пользователь не найден'));
-//       } return res.send({
-//         name: user.name,
-//         about: user.about,
-//         avatar: user.avatar,
-//         email: user.email,
-//         _id: user._id,
-//       });
-//     })
-//     .catch(next);
-// };
-
 const getCurrentUser = (req, res, next) => {
-  const { userId } = req.params;
-
-  return Users.findById(userId)
-    .orFail(() => {
-      throw new NotFound('Пользователь не найден');
+  Users.findById(req.user._id)
+    .then((user) => {
+      if (user == null) {
+        return next(new NotFound('Пользователь не найден'));
+      } return res.send({
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+        _id: user._id,
+      });
     })
-    .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new ValidationError('Переданы некорректные данные'));
-      }
-      if (err.message === 'NotFound') {
-        next(new NotFound('Пользователь не найден'));
-      }
-      next(err);
-    });
+    .catch(next);
 };
 
 const getUsers = (req, res, next) => {
