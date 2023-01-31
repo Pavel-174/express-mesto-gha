@@ -12,8 +12,8 @@ const handleError = require('./middlewares/handleError');
 const app = express();
 
 const limiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 5000,
+  windowMs: 15 * 60 * 1000,
+  max: 50,
 });
 
 app.use(cookieParser());
