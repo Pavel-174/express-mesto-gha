@@ -8,7 +8,7 @@ const routerCard = require('./routes/cards');
 const auth = require('./middlewares/auth');
 const { login, createUser } = require('./controllers/users');
 const handelError = require('./middlewares/handelError');
-const NotFoundError = require('./errors/NotFoundError');
+const NotFound = require('./errors/index');
 
 const app = express();
 
@@ -43,7 +43,7 @@ app.get('/signout', (req, res) => {
 app.use('/users', auth, routerUser);
 app.use('/cards', auth, routerCard);
 app.use('*', auth, (req, res, next) => {
-  next(new NotFoundError('Страница не существует'));
+  next(new NotFound('Страница не существует'));
 });
 
 app.use(errors());
