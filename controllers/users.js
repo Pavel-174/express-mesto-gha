@@ -9,99 +9,98 @@ const { NODE_ENV, JWT_SECRET } = process.env;
 
 const getUsers = (req, res, next) => {
   User.find({})
-    .then((user) => res.status(200).send(user))
+    .then((users) => {
+      if (!users) {
+        return next(new NotFound('Объект не найден'));
+      } return res.send({ data: users });
+    })
     .catch(next);
 };
 
 const getUser = (req, res, next) => {
-  const { _id } = req.params;
-  User.findById(_id)
-    .orFail(new NotFound('Пользователь по указанному id не найден.'))
-    .then((user) => res.status(200).send(user))
+  User.findById(req.params.userId)
+    .then((userId) => {
+      if (userId == null) {
+        throw new NotFound('Объект не найден');
+      } return res.send({ data: userId });
+    })
     .catch(next);
 };
 
 const createUser = (req, res, next) => {
   const {
-    name,
-    about,
-    avatar,
-    email,
-    password,
+    name, about, avatar, email, password,
   } = req.body;
-
   User.findOne({ email })
-    .then((mail) => {
-      if (mail) {
-        throw new ConflictError('Пользователь с таким email уже существует.');
-      } else {
-        bcrypt.hash(password, 10)
-          .then((hash) => User.create({
-            name,
-            about,
-            avatar,
-            email,
-            password: hash,
-          }))
-          .then((user) => res.status(200).send(user))
-          .catch((err) => {
-            if (err.name === 'ValidationError') {
-              throw new ValidationError('Переданы некорректные данные при создании пользователя.');
-            }
-          })
-          .catch(next);
-      }
+    .then((user) => {
+      if (user) {
+        throw new ConflictError('Пользователь с данным email уже существует');
+      } return bcrypt.hash(password, 10);
     })
-    .catch(next);
+    .then((hash) => User.create({
+      name, about, avatar, email, password: hash,
+    }))
+    .then((newUser) => {
+      if (!newUser) {
+        return next(new NotFound('Объект не найден'));
+      } return res.send({
+        name: newUser.name,
+        about: newUser.about,
+        avatar: newUser.avatar,
+        email: newUser.email,
+        _id: newUser._id,
+      });
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new ValidationError('Введены ны некорректные данные'));
+      } next(err);
+    });
 };
 
 const updateProfile = (req, res, next) => {
-  const {
-    name,
-    about,
-  } = req.body;
-  const owner = req.user._id;
-
-  User.findByIdAndUpdate(owner, {
-    name,
-    about,
-  }, { new: true, runValidators: true })
-    .orFail(new NotFound('Пользователь по указанному id не найден.'))
-    .then((user) => res.status(200).send(user))
+  const { name, about } = req.body;
+  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+    .then((updatedUser) => {
+      if (!updatedUser) {
+        return next(new NotFound('Объект не найден'));
+      } return res.send({ data: updatedUser });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new ValidationError('Переданы некорректные данные при обновлении профиля.');
-      }
-    })
-    .catch(next);
+        next(new ValidationError('Переданы некорректные данные'));
+      } next(err);
+    });
 };
 
 const updateAvatar = (req, res, next) => {
-  const {
-    avatar,
-  } = req.body;
-  const owner = req.user._id;
-
-  User.findByIdAndUpdate(owner, {
-    avatar,
-  }, { new: true, runValidators: true })
-    .orFail(new NotFound('Пользователь по указанному id не найден.'))
-    .then((user) => {
-      res.status(200).send(user);
+  const { avatar } = req.body;
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
+    .then((updatedUser) => {
+      if (!updatedUser) {
+        return next(new NotFound('Объект не найден'));
+      } return res.send({ data: updatedUser });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new ValidationError('Переданы некорректные данные при обновлении аватара.');
-      }
-    })
-    .catch(next);
+        next(new ValidationError('Переданы некорректные данные'));
+      } next(err);
+    });
 };
 
 const getCurrentUser = (req, res, next) => {
-  const owner = req.user._id;
-  User.findById(owner)
-    .orFail(new NotFound('Пользователь по указанному id не найден.'))
-    .then((user) => res.status(200).send(user))
+  User.findById(req.user._id)
+    .then((user) => {
+      if (user == null) {
+        return next(new NotFound('Объект не найден'));
+      } return res.send({
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+        _id: user._id,
+      });
+    })
     .catch(next);
 };
 
