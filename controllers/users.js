@@ -11,30 +11,39 @@ const { NODE_ENV, JWT_SECRET } = process.env;
 
 const createUser = (req, res, next) => {
   const {
-    name, about, avatar, email, password,
+    email,
+    password,
+    name,
+    about,
+    avatar,
   } = req.body;
-  return bcrypt.hash(password, 10)
-    .then((hash) => Users.create({
-      name, about, avatar, email, password: hash,
-    }))
-    .then((newUser) => {
-      if (!newUser) {
-        return next(new NotFound('Пользователь не найден'));
-      } return res.send({
-        name: newUser.name,
-        about: newUser.about,
-        avatar: newUser.avatar,
-        email: newUser.email,
-        _id: newUser._id,
-      });
+
+  bcrypt.hash(password, 10)
+    .then((hash) => {
+      Users.create({
+        email,
+        password: hash,
+        name,
+        about,
+        avatar,
+      })
+        .then((newUser) => res.status(201).send({
+          email: newUser.email,
+          name: newUser.name,
+          about: newUser.about,
+          avatar: newUser.avatar,
+        }))
+        .catch((error) => {
+          if (error.code === 11000) {
+            next(new ConflictError('Пользователь с данным email уже существует'));
+          } else if (error.name === 'ValidationError') {
+            next(new ValidationError('Введены ны некорректные данные'));
+          } else {
+            next(error);
+          }
+        });
     })
-    .catch((err) => {
-      if (err.code === 11000) {
-        throw new ConflictError('Пользователь с таким email уже существует');
-      } else if (err.name === 'ValidationError') {
-        next(new ValidationError('Введены ны некорректные данные'));
-      } next(err);
-    });
+    .catch(next);
 };
 // const createUser = (req, res, next) => {
 //   const {
