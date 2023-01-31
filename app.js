@@ -3,9 +3,12 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const { celebrate, Joi, errors } = require('celebrate');
-const router = require ('./routes/index')
+const routerUser = require('./routes/users');
+const routerCard = require('./routes/cards');
+const auth = require('./middlewares/auth');
 const { login, createUser } = require('./controllers/users');
 const handelError = require('./middlewares/handelError');
+const NotFoundError = require('./errors/NotFoundError');
 
 const app = express();
 
@@ -15,8 +18,6 @@ const DATA_URL = 'mongodb://127.0.0.1:27017/mestodb';
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
-app.use(router);
 
 app.post('/signup', celebrate({
   body: Joi.object().keys({
@@ -39,7 +40,11 @@ app.get('/signout', (req, res) => {
   res.status(200).clearCookie('jwt').send({ message: 'Выход' });
 });
 
-
+app.use('/users', auth, routerUser);
+app.use('/cards', auth, routerCard);
+app.use('*', auth, (req, res, next) => {
+  next(new NotFoundError('Страница не существует'));
+});
 
 app.use(errors());
 
