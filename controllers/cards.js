@@ -1,15 +1,9 @@
 const Cards = require('../models/card');
-const { ValidationError, NotFound, ForbiddenError } = require('../errors/index');
-
-const getCards = (req, res, next) => {
-  Cards.find({})
-    .then((cards) => {
-      if (!cards) {
-        return next(new NotFound('Объект не найден'));
-      } return res.send({ data: cards });
-    })
-    .catch(next);
-};
+const {
+  ForbiddenError,
+  NotFound,
+  ValidationError,
+} = require('../errors/index');
 
 const createCard = (req, res, next) => {
   const { name, link } = req.body;
@@ -17,24 +11,33 @@ const createCard = (req, res, next) => {
   Cards.create({ name, link, owner })
     .then((newCard) => {
       if (!newCard) {
-        return next(new NotFound('Объект не найден'));
+        return next(new NotFound('Карточка не найдена'));
       } return res.send({ data: newCard });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new ValidationError('Переданы некорректные данные'));
+        next(new ValidationError('Переданы некорректные данные при создании карточки'));
       } next(err);
     });
+};
+
+const getCards = (req, res, next) => {
+  Cards.find({})
+    .then((cards) => {
+      if (!cards) {
+        return next(new NotFound('Карточка не найдена'));
+      } return res.send({ data: cards });
+    })
+    .catch(next);
 };
 
 const deleteCard = (req, res, next) => {
   Cards.findById(req.params.cardId)
     .then((card) => {
       if (card == null) {
-        throw new NotFound('Объект не найден');
-      }
-      if (String(card.owner) !== req.user._id) {
-        throw new ForbiddenError('Доступ ограничен');
+        throw new NotFound('Карточка не найдена');
+      } else if (String(card.owner) !== req.user._id) {
+        throw new ForbiddenError('В доступе отказано');
       } return Cards.findByIdAndRemove(req.params.cardId)
         .then((removedCard) => {
           res.send({ data: removedCard });
@@ -51,7 +54,7 @@ const likeCard = (req, res, next) => {
   )
     .then((cards) => {
       if (cards == null) {
-        throw new NotFound('Объект не найден');
+        throw new NotFound('Карточка не найдена');
       } res.send({ data: cards });
     })
     .catch(next);
@@ -65,15 +68,15 @@ const dislikeCard = (req, res, next) => {
   )
     .then((cards) => {
       if (cards == null) {
-        throw new NotFound('Объект не найден');
+        throw new NotFound('Карточка не найдена');
       } res.send({ data: cards });
     })
     .catch(next);
 };
 
 module.exports = {
-  getCards,
   createCard,
+  getCards,
   deleteCard,
   likeCard,
   dislikeCard,

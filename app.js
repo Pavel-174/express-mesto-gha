@@ -1,20 +1,29 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
+const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { celebrate, Joi, errors } = require('celebrate');
+const { login, createUser } = require('./controllers/users');
 const routerUser = require('./routes/users');
 const routerCard = require('./routes/cards');
 const auth = require('./middlewares/auth');
-const { login, createUser } = require('./controllers/users');
 const NotFound = require('./errors/index');
 const handelError = require('./middlewares/handelError');
 
 const app = express();
 app.use(cookieParser());
-
 const { PORT = 3000 } = process.env;
 const DATA_URL = 'mongodb://127.0.0.1:27017/mestodb';
+
+mongoose
+  .connect(DATA_URL)
+  .then(() => {
+    console.log(`App connected to database on ${DATA_URL}`);
+  })
+  .catch((err) => {
+    console.log('Database connection error');
+    console.error(err);
+  });
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -43,22 +52,12 @@ app.get('/signout', (req, res) => {
 app.use('/users', auth, routerUser);
 app.use('/cards', auth, routerCard);
 app.use('*', auth, (req, res, next) => {
-  next(new NotFound('Маршрут не найден'));
+  next(new NotFound('Страница не существует'));
 });
 
 app.use(errors());
 
 app.use((err, req, res, next) => { handelError(err, res, next); });
-
-mongoose
-  .connect(DATA_URL)
-  .then(() => {
-    console.log(`App connected to database on ${DATA_URL}`);
-  })
-  .catch((err) => {
-    console.log('Database connection error');
-    console.error(err);
-  });
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
