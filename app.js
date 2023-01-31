@@ -4,10 +4,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { celebrate, Joi, errors } = require('celebrate');
 const { login, createUser } = require('./controllers/users');
-const routerUser = require('./routes/users');
-const routerCard = require('./routes/cards');
-const auth = require('./middlewares/auth');
-const NotFound = require('./errors/index');
+const router = require('./routes/index');
 const handelError = require('./middlewares/handelError');
 
 const app = express();
@@ -49,11 +46,7 @@ app.get('/signout', (req, res) => {
   res.status(200).clearCookie('jwt').send({ message: 'Выход' });
 });
 
-app.use('/users', auth, routerUser);
-app.use('/cards', auth, routerCard);
-app.use('*', auth, (req, res, next) => {
-  next(new NotFound('Страница не существует'));
-});
+app.use(router);
 
 app.use(errors());
 
