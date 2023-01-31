@@ -54,6 +54,7 @@ app.use('/cards', auth, routerCard);
 app.use('*', auth, (req, res, next) => {
   next(new NotFound('Страница не существует'));
 });
+
 app.use(errors());
 
 app.use((err, req, res, next) => { handelError(err, res, next); });

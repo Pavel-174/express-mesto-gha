@@ -36,7 +36,7 @@ const createUser = (req, res, next) => {
       });
     })
     .catch((err) => {
-      if (err === 'ValidationError') {
+      if (err.name === 'ValidationError') {
         next(new ValidationError('Введены ны некорректные данные'));
       } next(err);
     });
@@ -87,7 +87,7 @@ const updateProfile = (req, res, next) => {
       } return res.send({ data: updatedUser });
     })
     .catch((err) => {
-      if (err === 'ValidationError') {
+      if (err.name === 'ValidationError') {
         next(new ValidationError('Переданы некорректные данные'));
       } next(err);
     });
@@ -102,7 +102,7 @@ const updateAvatar = (req, res, next) => {
       } return res.send({ data: updatedUser });
     })
     .catch((err) => {
-      if (err === 'ValidationError') {
+      if (err.name === 'ValidationError') {
         next(new ValidationError('Переданы некорректные данные'));
       } next(err);
     });

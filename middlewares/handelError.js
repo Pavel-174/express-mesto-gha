@@ -1,8 +1,6 @@
-const { ServerError } = require('../errors/index');
-
 function handleError(err, res, next) {
-  const { statusCode = ServerError, message } = err;
-  res.status(statusCode).send({ message: statusCode === ServerError ? 'На сервере произошла ошибка' : message });
+  const { statusCode = 500, message } = err;
+  res.status(statusCode).send({ message: statusCode === 500 ? 'На сервере произошла ошибка' : message });
   next();
 }
 
