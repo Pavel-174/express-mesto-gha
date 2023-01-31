@@ -45,7 +45,7 @@ app.get('/signout', (req, res) => {
   res.status(200).clearCookie('jwt').send({ message: 'Выход' });
 });
 
-app.use(limiter);
+// app.use(limiter);
 
 app.use(helmet());
 
