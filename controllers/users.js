@@ -9,11 +9,43 @@ const ConflictError = require('../errors/ConflictError');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
+const createUser = (req, res, next) => {
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+  return bcrypt.hash(password, 10)
+    .then((hash) => Users.create({
+      name, about, avatar, email, password: hash,
+    }))
+    .then((newUser) => {
+      if (!newUser) {
+        return next(new NotFound('Пользователь не найден'));
+      } return res.send({
+        name: newUser.name,
+        about: newUser.about,
+        avatar: newUser.avatar,
+        email: newUser.email,
+        _id: newUser._id,
+      });
+    })
+    .catch((err) => {
+      if (err.code === 11000) {
+        throw new ConflictError('Пользователь с таким email уже существует');
+      } else if (err.name === 'ValidationError') {
+        next(new ValidationError('Введены ны некорректные данные'));
+      } next(err);
+    });
+};
 // const createUser = (req, res, next) => {
 //   const {
 //     name, about, avatar, email, password,
 //   } = req.body;
-//   bcrypt.hash(password, 10)
+//   Users.findOne({ email })
+//     .then((user) => {
+//       if (user) {
+//         throw new ConflictError('Пользователь с данным email уже существует');
+//       } return bcrypt.hash(password, 10);
+//     })
 //     .then((hash) => Users.create({
 //       name, about, avatar, email, password: hash,
 //     }))
@@ -29,33 +61,11 @@ const { NODE_ENV, JWT_SECRET } = process.env;
 //       });
 //     })
 //     .catch((err) => {
-//       if (err.code === 11000) {
-//         throw new ConflictError('Пользователь с таким email уже существует');
-//       } else if (err.name === 'ValidationError') {
+//       if (err.name === 'ValidationError') {
 //         next(new ValidationError('Введены ны некорректные данные'));
 //       } next(err);
 //     });
 // };
-const createUser = (req, res, next) => {
-  const {
-    name, about, avatar, email, password,
-  } = req.body;
-  bcrypt.hash(password, 10)
-    .then((hash) => {
-      Users.create({
-        name, about, avatar, email, password: hash,
-      });
-    })
-    .then((newUser) => res.send(newUser))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        throw new ValidationError('Введены ны некорректные данные');
-      } else if (err.code === 11000) {
-        throw new ConflictError('Пользователь с таким email уже существует');
-      }
-    })
-    .catch(next);
-};
 
 const getCurrentUser = (req, res, next) => {
   Users.findById(req.user._id)
