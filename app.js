@@ -6,8 +6,16 @@ const { celebrate, Joi, errors } = require('celebrate');
 const router = require('./routes/index');
 const { login, createUser } = require('./controllers/users');
 const handleError = require('./middlewares/handleError');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+});
+
 app.use(cookieParser());
 
 const { PORT = 3000 } = process.env;
@@ -36,6 +44,10 @@ app.post('/signup', celebrate({
 app.get('/signout', (req, res) => {
   res.status(200).clearCookie('jwt').send({ message: 'Выход' });
 });
+
+app.use(limiter);
+
+app.use(helmet());
 
 app.use(router);
 

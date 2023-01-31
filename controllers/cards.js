@@ -21,11 +21,7 @@ const createCard = (req, res, next) => {
 
 const getCards = (req, res, next) => {
   Cards.find({})
-    .then((cards) => {
-      if (!cards) {
-        return next(new NotFound('Карточка не найдена'));
-      } return res.send({ data: cards });
-    })
+    .then((cards) => res.send(cards))
     .catch(next);
 };
 

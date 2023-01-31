@@ -11,33 +11,23 @@ const { NODE_ENV, JWT_SECRET } = process.env;
 
 const createUser = (req, res, next) => {
   const {
-    name, about, avatar, email, password,
+    name, about, avatar, email,
   } = req.body;
-  Users.findOne({ email })
-    .then((user) => {
-      if (user) {
-        throw new ConflictError('Пользователь с данным email уже существует');
-      } return bcrypt.hash(password, 10);
-    })
-    .then((hash) => Users.create({
-      name, about, avatar, email, password: hash,
-    }))
-    .then((newUser) => {
-      if (!newUser) {
-        return next(new NotFound('Пользователь не найден'));
-      } return res.send({
-        name: newUser.name,
-        about: newUser.about,
-        avatar: newUser.avatar,
-        email: newUser.email,
-        _id: newUser._id,
+  bcrypt.hash(req.body.password, 10)
+    .then((hash) => {
+      Users.create({
+        name, about, avatar, email, password: hash,
       });
     })
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new ValidationError('Введены ны некорректные данные'));
-      } next(err);
-    });
+        throw new ValidationError('Введены ны некорректные данные');
+      } else if (err.code === 11000) {
+        throw new ConflictError('Пользователь с таким email уже существует');
+      }
+    })
+    .catch(next);
 };
 
 const getCurrentUser = (req, res, next) => {
@@ -58,11 +48,7 @@ const getCurrentUser = (req, res, next) => {
 
 const getUsers = (req, res, next) => {
   Users.find({})
-    .then((users) => {
-      if (!users) {
-        return next(new NotFound('Пользователь не найден'));
-      } return res.send({ data: users });
-    })
+    .then((users) => res.send(users))
     .catch(next);
 };
 
