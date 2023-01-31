@@ -51,7 +51,7 @@ app.get('/signout', (req, res) => {
 
 app.use('/users', auth, routerUser);
 app.use('/cards', auth, routerCard);
-app.use('*', auth, (req, res, next) => {
+app.use('*', (req, res, next) => {
   next(new NotFound('Страница не существует'));
 });
 
