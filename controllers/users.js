@@ -45,36 +45,6 @@ const createUser = (req, res, next) => {
     })
     .catch(next);
 };
-// const createUser = (req, res, next) => {
-//   const {
-//     name, about, avatar, email, password,
-//   } = req.body;
-//   Users.findOne({ email })
-//     .then((user) => {
-//       if (user) {
-//         throw new ConflictError('Пользователь с данным email уже существует');
-//       } return bcrypt.hash(password, 10);
-//     })
-//     .then((hash) => Users.create({
-//       name, about, avatar, email, password: hash,
-//     }))
-//     .then((newUser) => {
-//       if (!newUser) {
-//         return next(new NotFound('Пользователь не найден'));
-//       } return res.send({
-//         name: newUser.name,
-//         about: newUser.about,
-//         avatar: newUser.avatar,
-//         email: newUser.email,
-//         _id: newUser._id,
-//       });
-//     })
-//     .catch((err) => {
-//       if (err.name === 'ValidationError') {
-//         next(new ValidationError('Введены ны некорректные данные'));
-//       } next(err);
-//     });
-// };
 
 const getCurrentUser = (req, res, next) => {
   Users.findById(req.user._id)
