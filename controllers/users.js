@@ -29,36 +29,33 @@ const getUser = (req, res, next) => {
 
 const createUser = (req, res, next) => {
   const {
-    name,
-    about,
-    avatar,
-    email,
-    password,
+    name, about, avatar, email, password,
   } = req.body;
-
   User.findOne({ email })
-    .then((mail) => {
-      if (mail) {
-        throw new ConflictError('Пользователь с таким email уже существует.');
-      } else {
-        bcrypt.hash(password, 10)
-          .then((hash) => User.create({
-            name,
-            about,
-            avatar,
-            email,
-            password: hash,
-          }))
-          .then((user) => res.status(200).send(user))
-          .catch((err) => {
-            if (err.name === 'ValidationError') {
-              throw new ValidationError('Переданы некорректные данные при создании пользователя.');
-            }
-          })
-          .catch(next);
-      }
+    .then((user) => {
+      if (user) {
+        throw new ConflictError('Пользователь с данным email уже существует');
+      } return bcrypt.hash(password, 10);
     })
-    .catch(next);
+    .then((hash) => User.create({
+      name, about, avatar, email, password: hash,
+    }))
+    .then((newUser) => {
+      if (!newUser) {
+        return next(new NotFound('Объект не найден'));
+      } return res.send({
+        name: newUser.name,
+        about: newUser.about,
+        avatar: newUser.avatar,
+        email: newUser.email,
+        _id: newUser._id,
+      });
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new ValidationError('Введены ны некорректные данные'));
+      } next(err);
+    });
 };
 
 const updateProfile = (req, res, next) => {
