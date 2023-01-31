@@ -1,30 +1,54 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const { errors } = require('celebrate');
-const { createUser, login } = require('./controllers/users');
-const {
-  validationCreateUser,
-  validationLogin,
-} = require('./middlewares/validations');
+const cookieParser = require('cookie-parser');
+const { celebrate, Joi, errors } = require('celebrate');
+const routerCards = require('./routes/cards');
+const routerUsers = require('./routes/users');
 const auth = require('./middlewares/auth');
+const { login, createUser } = require('./controllers/users');
 const handelError = require('./middlewares/handelError');
-const routes = require('./routes');
+const NotFoundError = require('./errors/NotFoundError');
 
 const app = express();
 
 const { PORT = 3000 } = process.env;
 const DATA_URL = 'mongodb://127.0.0.1:27017/mestodb';
 
+app.use(cookieParser());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-app.post('/signin', validationLogin, login);
-app.post('/signup', validationCreateUser, createUser);
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().regex(/^((ftp|http|https):\/\/)?(www\.)?([A-Za-zА-Яа-я0-9]{1}[A-Za-zА-Яа-я0-9-]*\.?)*\.{1}[A-Za-zА-Яа-я0-9-]{2,8}(\/([\w#!:.?+=&%@!\-/])*)?/),
+    email: Joi.string().required().email(),
+    password: Joi.string().required(),
+  }),
+}), createUser);
 
-app.use(auth);
-app.use(routes);
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required(),
+  }),
+}), login);
+
+app.get('/signout', (req, res) => {
+  res.status(200).clearCookie('jwt').send({ message: 'Выход' });
+});
+
+app.use('/users', auth, routerUsers);
+app.use('/cards', auth, routerCards);
+app.use('*', auth, (req, res, next) => {
+  next(new NotFoundError('Страницы не существует'));
+});
+
 app.use(errors());
-app.use(handelError);
+
+app.use((err, req, res, next) => { handelError(err, res, next); });
 
 mongoose
   .connect(DATA_URL)
