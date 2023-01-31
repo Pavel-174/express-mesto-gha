@@ -3,70 +3,72 @@ const { ValidationError, NotFound, ForbiddenError } = require('../errors/index')
 
 const getCards = (req, res, next) => {
   Cards.find({})
-    .then((cards) => {
-      if (!cards) {
-        return next(new NotFound('Объект не найден'));
-      } return res.send({ data: cards });
-    })
+    .then((card) => res.status(200).send(card))
     .catch(next);
 };
 
 const createCard = (req, res, next) => {
-  const { name, link } = req.body;
+  const {
+    name,
+    link,
+  } = req.body;
   const owner = req.user._id;
-  Cards.create({ name, link, owner })
-    .then((newCard) => {
-      if (!newCard) {
-        return next(new NotFound('Объект не найден'));
-      } return res.send({ data: newCard });
-    })
+
+  Cards.create({
+    name,
+    link,
+    owner,
+  })
+    .then((card) => res.status(200).send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new ValidationError('Переданы некорректные данные'));
-      } next(err);
-    });
+        throw new ValidationError('Переданы некорректные данные при создании карточки.');
+      }
+    })
+    .catch(next);
 };
 
 const deleteCard = (req, res, next) => {
-  Cards.findById(req.params.cardId)
+  const { _id } = req.params;
+  const owner = req.user._id;
+  Cards.findById(_id)
+    .orFail(new NotFound('Карточка с указанным id не найдена.'))
     .then((card) => {
-      if (card == null) {
-        throw new NotFound('Объект не найден');
-      } else if (String(card.owner) !== req.user._id) {
-        throw new ForbiddenError('Доступ ограничен');
-      } return Cards.findByIdAndRemove(req.params.cardId)
-        .then((removedCard) => {
-          res.send({ data: removedCard });
-        });
+      if (card.owner.toString() === owner) {
+        Cards.findByIdAndDelete(_id)
+          .then((item) => res.status(200).send(item))
+          .catch(next);
+      } else {
+        throw new ForbiddenError('Отсутствуют права на уделение карточки.');
+      }
+      return res.status(200).send({ message: 'Карточка удалена.' });
     })
     .catch(next);
 };
 
 const likeCard = (req, res, next) => {
+  const { _id } = req.params;
+  const owner = req.user._id;
   Cards.findByIdAndUpdate(
-    req.params.cardId,
-    { $addToSet: { likes: req.user._id } },
+    _id,
+    { $addToSet: { likes: owner } },
     { new: true },
   )
-    .then((cards) => {
-      if (cards == null) {
-        throw new NotFound('Объект не найден');
-      } res.send({ data: cards });
-    })
+    .orFail(new NotFound('Карточка с указанным id не найдена.'))
+    .then((card) => res.status(200).send(card))
     .catch(next);
 };
 
 const dislikeCard = (req, res, next) => {
+  const { _id } = req.params;
+  const owner = req.user._id;
   Cards.findByIdAndUpdate(
-    req.params.cardId,
-    { $pull: { likes: req.user._id } },
+    _id,
+    { $pull: { likes: owner } },
     { new: true },
   )
-    .then((cards) => {
-      if (cards == null) {
-        throw new NotFound('Объект не найден');
-      } res.send({ data: cards });
-    })
+    .orFail(new NotFound('Карточка с указанным id не найдена.'))
+    .then((card) => res.status(200).send(card))
     .catch(next);
 };
 
