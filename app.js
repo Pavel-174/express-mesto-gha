@@ -1,18 +1,20 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
 const { celebrate, Joi, errors } = require('celebrate');
+const routerUser = require('./routes/users');
+const routerCard = require('./routes/cards');
+const auth = require('./middlewares/auth');
 const { login, createUser } = require('./controllers/users');
+const NotFound = require('./errors/index');
 const handelError = require('./middlewares/handelError');
-const router = require('./routes/index');
 
 const app = express();
+app.use(cookieParser());
 
 const { PORT = 3000 } = process.env;
 const DATA_URL = 'mongodb://127.0.0.1:27017/mestodb';
-
-app.use(cookieParser());
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -38,18 +40,20 @@ app.get('/signout', (req, res) => {
   res.status(200).clearCookie('jwt').send({ message: 'Выход' });
 });
 
+app.use('/users', auth, routerUser);
+app.use('/cards', auth, routerCard);
+app.use('*', auth, (req, res, next) => {
+  next(new NotFound('Маршрут не найден'));
+});
+
 app.use(errors());
 
 app.use((err, req, res, next) => { handelError(err, res, next); });
-
-app.use(router);
 
 mongoose
   .connect(DATA_URL)
   .then(() => {
     console.log(`App connected to database on ${DATA_URL}`);
-  }, {
-    useNewUrlParser: true,
   })
   .catch((err) => {
     console.log('Database connection error');
