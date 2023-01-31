@@ -29,10 +29,10 @@ const createUser = (req, res, next) => {
       });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new ValidationError('Введены ны некорректные данные'));
-      } else if (err.code === 11000) {
+      if (err.code === 11000) {
         throw new ConflictError('Пользователь с таким email уже существует');
+      } else if (err.name === 'ValidationError') {
+        next(new ValidationError('Введены ны некорректные данные'));
       } next(err);
     });
 };
