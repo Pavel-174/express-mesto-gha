@@ -4,4 +4,5 @@ class AuthError extends Error {
     this.statusCode = 401;
   }
 }
+
 module.exports = AuthError;

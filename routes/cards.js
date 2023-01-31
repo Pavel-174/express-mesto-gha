@@ -1,10 +1,10 @@
-const routerCard = require('express').Router();
+const routerCards = require('express').Router();
 const { celebrate, Joi } = require('celebrate');
 const {
   createCard, getCards, deleteCard, likeCard, dislikeCard,
 } = require('../controllers/cards');
 
-routerCard.post('/', celebrate({
+routerCards.post('/', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30).required(),
     link: Joi.string().required()
@@ -12,23 +12,23 @@ routerCard.post('/', celebrate({
   }),
 }), createCard);
 
-routerCard.get('/', getCards);
-routerCard.delete('/:cardId', celebrate({
+routerCards.get('/', getCards);
+routerCards.delete('/:cardId', celebrate({
   params: Joi.object().keys({
     cardId: Joi.string().hex().length(24),
   }),
 }), deleteCard);
 
-routerCard.put('/:cardId/likes', celebrate({
+routerCards.put('/:cardId/likes', celebrate({
   params: Joi.object().keys({
     cardId: Joi.string().hex().length(24),
   }),
 }), likeCard);
 
-routerCard.delete('/:cardId/likes', celebrate({
+routerCards.delete('/:cardId/likes', celebrate({
   params: Joi.object().keys({
     cardId: Joi.string().hex().length(24),
   }),
 }), dislikeCard);
 
-module.exports = routerCard;
+module.exports = routerCards;

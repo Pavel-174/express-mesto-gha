@@ -1,14 +1,13 @@
 const router = require('express').Router();
-const routerUser = require('./users');
-const routerCard = require('./cards');
-const NotFound = require('../errors/index');
+const routerUsers = require('./users');
+const routerCards = require('./cards');
+const NotFound = require('../errors/NotFound');
 const auth = require('../middlewares/auth');
 
-router.use('/users', auth, routerUser);
-router.use('/cards', auth, routerCard);
+router.use('/cards', auth, routerCards);
+router.use('/users', auth, routerUsers);
 
-router.use((req, res, next) => {
-  next(new NotFound('Запрашиваемая страница не существует'));
+router.use('*', auth, (req, res, next) => {
+  next(new NotFound('Маршрут не найден'));
 });
-
 module.exports = router;

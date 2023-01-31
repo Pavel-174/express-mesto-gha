@@ -3,30 +3,25 @@ const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { celebrate, Joi, errors } = require('celebrate');
+const router = require('./routes/index');
 const { login, createUser } = require('./controllers/users');
-const routerUser = require('./routes/users');
-const routerCard = require('./routes/cards');
-const auth = require('./middlewares/auth');
-const NotFound = require('./errors/index');
-const handelError = require('./middlewares/handelError');
+const handleError = require('./middlewares/handleError');
 
 const app = express();
 app.use(cookieParser());
+
 const { PORT = 3000 } = process.env;
 const DATA_URL = 'mongodb://127.0.0.1:27017/mestodb';
 
-mongoose
-  .connect(DATA_URL)
-  .then(() => {
-    console.log(`App connected to database on ${DATA_URL}`);
-  })
-  .catch((err) => {
-    console.log('Database connection error');
-    console.error(err);
-  });
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required(),
+  }),
+}), login);
 
 app.post('/signup', celebrate({
   body: Joi.object().keys({
@@ -38,26 +33,25 @@ app.post('/signup', celebrate({
   }),
 }), createUser);
 
-app.post('/signin', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required(),
-  }),
-}), login);
-
 app.get('/signout', (req, res) => {
   res.status(200).clearCookie('jwt').send({ message: 'Выход' });
 });
 
-app.use('/users', auth, routerUser);
-app.use('/cards', auth, routerCard);
-app.use('*', (req, res, next) => {
-  next(new NotFound('Страница не существует'));
-});
+app.use(router);
 
 app.use(errors());
 
-app.use((err, req, res, next) => { handelError(err, res, next); });
+app.use((err, req, res, next) => { handleError(err, res, next); });
+
+mongoose
+  .connect(DATA_URL)
+  .then(() => {
+    console.log(`App connected to database on ${DATA_URL}`);
+  })
+  .catch((err) => {
+    console.log('Database connection error');
+    console.error(err);
+  });
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
