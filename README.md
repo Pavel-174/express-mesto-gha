@@ -1,8 +1,6 @@
 [![Tests](../../actions/workflows/tests-13-sprint.yml/badge.svg)](../../actions/workflows/tests-13-sprint.yml) [![Tests](../../actions/workflows/tests-14-sprint.yml/badge.svg)](../../actions/workflows/tests-14-sprint.yml) 
 
-# Проект Mesto фронтенд + бэкенд 
-
- 
+# Бэкенд проекта Mesto   
 
 # **_Проект: Express-mesto-gha_** 
 
@@ -40,4 +38,7 @@
 
  
 
-Ссылка на репозиторий: https://github.com/Pavel-174/express-mesto-gha 
+Фронтенд проекта Mesto на React с авторизацией и регистрацией: https://github.com/Pavel-174/react-mesto-auth
+Фронтенд проекта Mesto на React: https://github.com/Pavel-174/mesto-react
+Фронтенд проекта Mesto на JavaScript: https://github.com/Pavel-174/mesto
+
