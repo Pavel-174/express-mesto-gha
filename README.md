@@ -39,6 +39,8 @@
  
 
 Фронтенд проекта Mesto на React с авторизацией и регистрацией: https://github.com/Pavel-174/react-mesto-auth
+
 Фронтенд проекта Mesto на React: https://github.com/Pavel-174/mesto-react
+
 Фронтенд проекта Mesto на JavaScript: https://github.com/Pavel-174/mesto
 
