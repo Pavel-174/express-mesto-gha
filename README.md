@@ -36,6 +36,10 @@
 
 `npm run dev` — запускает сервер с hot-reload 
 
+
+ 
+ ## Предыдущие проетные работы
+ 
  
 
 Фронтенд проекта Mesto на React с авторизацией и регистрацией: https://github.com/Pavel-174/react-mesto-auth
