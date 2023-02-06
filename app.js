@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const router = require('./routes/index');
 const { login, createUser } = require('./controllers/users');
 const handleError = require('./middlewares/handleError');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const app = express();
 
@@ -15,6 +16,10 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 50,
 });
+
+app.use(requestLogger);
+
+app.use(errorLogger);
 
 app.use(cookieParser());
 
