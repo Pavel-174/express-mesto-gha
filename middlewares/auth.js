@@ -5,14 +5,14 @@ const Unauthorized = require('../errors/AuthError');
 const { NODE_ENV, JWT_SECRET } = process.env;
 
 module.exports = (req, res, next) => {
-  const token = req.cookies.jwt;
-  if (token == null) {
-    return next(new Unauthorized('Требуется авторизация'));
-  } let payload;
+  const { authorization } = req.headers;
+  if (!authorization || !authorization.startsWith('Bearer ')) {
+    return next(new Unauthorized('Необходима авторизация'));
+  } let token = authorization.replace('Bearer ', '');
   try {
-    payload = jwt.verify(token, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret');
+    token = jwt.verify(token, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret');
   } catch (err) {
-    return next(new Unauthorized('Требуется авторизация'));
-  } req.user = payload;
+    return next(new Unauthorized('Необходима авторизация'));
+  } req.user = token;
   return next();
 };

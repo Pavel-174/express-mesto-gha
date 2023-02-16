@@ -9,6 +9,7 @@ const router = require('./routes/index');
 const { login, createUser } = require('./controllers/users');
 const handleError = require('./middlewares/handleError');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
+const cors = require('./middlewares/cors');
 
 const app = express();
 
@@ -22,6 +23,8 @@ app.use(requestLogger);
 app.use(errorLogger);
 
 app.use(cookieParser());
+
+app.use((res, req, next) => cors(res, req, next));
 
 const { PORT = 3000 } = process.env;
 const DATA_URL = 'mongodb://127.0.0.1:27017/mestodb';

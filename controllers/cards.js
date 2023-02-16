@@ -1,4 +1,4 @@
-const Cards = require('../models/card');
+const Card = require('../models/card');
 const ValidationError = require('../errors/ValidationError');
 const NotFound = require('../errors/NotFound');
 const ForbiddenError = require('../errors/ForbiddenError');
@@ -6,7 +6,7 @@ const ForbiddenError = require('../errors/ForbiddenError');
 const createCard = (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user._id;
-  Cards.create({ name, link, owner })
+  Card.create({ name, link, owner })
     .then((newCard) => {
       if (!newCard) {
         return next(new NotFound('Карточка не найдена'));
@@ -20,19 +20,19 @@ const createCard = (req, res, next) => {
 };
 
 const getCards = (req, res, next) => {
-  Cards.find({})
+  Card.find({})
     .then((cards) => res.send(cards))
     .catch(next);
 };
 
 const deleteCard = (req, res, next) => {
-  Cards.findById(req.params.cardId)
+  Card.findById(req.params.cardId)
     .then((card) => {
       if (card == null) {
         throw new NotFound('Карточка не найдена');
       } else if (String(card.owner) !== req.user._id) {
         throw new ForbiddenError('Доступ запрещен');
-      } return Cards.findByIdAndRemove(req.params.cardId)
+      } return Card.findByIdAndRemove(req.params.cardId)
         .then((removedCard) => {
           res.send({ data: removedCard });
         });
@@ -41,7 +41,7 @@ const deleteCard = (req, res, next) => {
 };
 
 const likeCard = (req, res, next) => {
-  Cards.findByIdAndUpdate(
+  Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
     { new: true },
@@ -55,7 +55,7 @@ const likeCard = (req, res, next) => {
 };
 
 const dislikeCard = (req, res, next) => {
-  Cards.findByIdAndUpdate(
+  Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
     { new: true },

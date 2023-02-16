@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const Users = require('../models/user');
+const User = require('../models/user');
 const ValidationError = require('../errors/ValidationError');
 const AuthError = require('../errors/AuthError');
 const NotFound = require('../errors/NotFound');
@@ -20,7 +20,7 @@ const createUser = (req, res, next) => {
 
   bcrypt.hash(password, 10)
     .then((hash) => {
-      Users.create({
+      User.create({
         email,
         password: hash,
         name,
@@ -47,7 +47,7 @@ const createUser = (req, res, next) => {
 };
 
 const getCurrentUser = (req, res, next) => {
-  Users.findById(req.user._id)
+  User.findById(req.user._id)
     .then((user) => {
       if (user == null) {
         return next(new NotFound('Пользователь не найден'));
@@ -63,13 +63,13 @@ const getCurrentUser = (req, res, next) => {
 };
 
 const getUsers = (req, res, next) => {
-  Users.find({})
+  User.find({})
     .then((users) => res.send({ data: users }))
     .catch(next);
 };
 
 const getUserById = (req, res, next) => {
-  Users.findById(req.params.userId)
+  User.findById(req.params.userId)
     .then((userId) => {
       if (userId == null) {
         throw new NotFound('Пользователь не найден');
@@ -80,7 +80,7 @@ const getUserById = (req, res, next) => {
 
 const updateProfile = (req, res, next) => {
   const { name, about } = req.body;
-  Users.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then((updatedUser) => {
       if (!updatedUser) {
         return next(new NotFound('Пользователь не найден'));
@@ -95,7 +95,7 @@ const updateProfile = (req, res, next) => {
 
 const updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
-  Users.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then((updatedUser) => {
       if (!updatedUser) {
         return next(new NotFound('Пользователь не найден'));
@@ -110,7 +110,7 @@ const updateAvatar = (req, res, next) => {
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
-  Users.findOne({ email }).select('+password')
+  User.findOne({ email }).select('+password')
     .then((user) => {
       if (user === null) {
         throw new AuthError('Неправильная почта или пароль');
@@ -119,12 +119,13 @@ const login = (req, res, next) => {
           if (!matched) {
             throw new AuthError('Неправильная почта или пароль');
           } const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret', { expiresIn: '7d' });
-          res.cookie('jwt', token, { maxAge: 3600000 * 7, httpOnly: true, sameSite: true }).send({
+          res.send({
             name: user.name,
             about: user.about,
             avatar: user.avatar,
             email: user.email,
             _id: user._id,
+            token,
           });
         });
     })
